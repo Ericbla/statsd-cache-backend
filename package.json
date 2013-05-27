@@ -1,0 +1,13 @@
+{
+  "name": "statsd-cache-backend",
+  "version": "0.0.1",
+  "author": "Eric Blanchard <ericbla@gmail.com>",
+  "private": true,
+  "main": "./statsd-cache-backend.js",
+  "dependencies": {
+    "express": ">=3.0"
+  },
+  "devDependencies": {
+    "vows": "~0.7.0"
+  }
+}
