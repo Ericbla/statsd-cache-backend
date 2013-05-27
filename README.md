@@ -12,24 +12,23 @@ brings a thin persistency layer to statsd and exposes cached metrics through a W
 ## Configuration
   * Add this backend to backends list
 ```
-  backends: ['/path-to-this-module/statsd-cache-backend.js']
+backends: ['/path-to-this-module/statsd-cache-backend.js']
 ```
 
   * This backend supports the following config options:
 ```
-  statsdCacheBackend: {
+statsdCacheBackend: {
     "httpPort" : 8080,                  # The HTTP port of the web REST service
     "apiPrefix" : "/api",               # An URL prefix for the API
     "metricTypes" : 'gauges, counters', # The coma separated list of metrics to consider
     "filers" : [ "^dev\." ],            # A list of regexp for the metrics to handel
     "storeFile" : "cacheStore.json",    # The filename for persistency of this backend
     "storeRate" : 360                   # Save to file period (express in number of statsd flush period)
-  }
-
+}
 ```
 
 ## Dependencies
-- [express]()
+- [express](http://expressjs.com/)
 
 ## Development
 - [Bugs](https://github.com/Ericbla/statsd-cache-backend/issues)
