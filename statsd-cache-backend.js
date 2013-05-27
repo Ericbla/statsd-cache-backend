@@ -22,6 +22,7 @@
 var express = require('express');
 var http = require('http');
 var fs = require('fs');
+var joiner = require('./async-joiner.js');
 require('./response.js');
 
 var debug;
@@ -66,17 +67,18 @@ var save_stats = function(callback) {
 exports.save_stats = save_stats;
 
 var load_stats = function(callback) {
+    trace('statsd-cache-backend: load_stats triggered:');
     fs.readFile(storeFile, function(err, data) {
         var loaded = 0;
         if (err) {
 		    if (err.code == 'ENOENT') {
-				trace('statsd-cache-backend: load_stats Warning store file not present: ', err);
+				trace('statsd-cache-backend.load_stats: Warning store file not present: ', err);
 				err = null;
 			} else {
-				console.log('statsd-cache-backend: load_stats Error: ', err);
+				console.log('statsd-cache-backend.load_stats: Error: ', err);
 			}
         } else {
-            trace('statsd-cache-backend: load_stats: merging (starting with ' + allStats.length + ' metrics');
+            trace('statsd-cache-backend.load_stats: merging (starting with ' + allStats.length + ' metrics)');
             var loadedStats = JSON.parse(data);
             if (loadedStats) {
                 for (var metric in loadedStats) {
@@ -87,7 +89,7 @@ var load_stats = function(callback) {
                     }
                 }
             }
-            trace('statsd-cache-backend: load_stats: done (' + allStats.length + ' metrics now');
+            trace('statsd-cache-backend.load_stats: done (' + allStats.length + ' metrics now)');
             
         }
         if (callback) {
@@ -103,6 +105,13 @@ var clear_stats = function() {
 	}
 };
 exports.clear_stats = clear_stats;
+
+var shutdown = function(callback) {
+	if (http_server) {
+		http_server.close(callback);
+	}
+};
+exports.shutdown = shutdown;
 
 var filter_metrics = function (metrics, type) {
 	var filtered = {};
@@ -216,7 +225,7 @@ var backend_status = function (writeCb) {
 	}
 };
 
-exports.init = function (startup_time, config, events) {
+exports.init = function (startup_time, config, events, ready_callback) {
 	debug = config.debug;
 	trace('statsd-cache-backend.init: config: ', config);
 	config.statsdCacheBackend = config.statsdCacheBackend || {};
@@ -229,8 +238,17 @@ exports.init = function (startup_time, config, events) {
 	flushesAfterStore = 0;
 	storeFile = config.statsdCacheBackend.storeFile || __dirname + '/cacheStore.json';
 	flushInterval = config.flushInterval;
+	var myJoiner = new joiner.AsyncJoiner(2, function () {
+		trace('statsd-cache-backend.init: AsyncJoinner all done');
+		if (ready_callback) {
+			ready_callback();
+		}
+		});
+	
 	// Load stats from persistency file (if any)
-	load_stats();
+	load_stats(function(err, loaded) {
+		trace('statsd-cache-backend.init: load_stats done');
+		myJoiner.done(); });
 	
 	// Create the REST service
 	service = express();
@@ -259,8 +277,10 @@ exports.init = function (startup_time, config, events) {
 	// Create the HTTP server that will serve this service
 	http_server = http.createServer(service);
 	
-	trace('statsd-cache-backend: init: Runnint HTTP server on port ' + myBackendPort);
-	http_server.listen(myBackendPort);
+	trace('statsd-cache-backend.init: Launching HTTP server on port' + myBackendPort);
+	http_server.listen(myBackendPort, function() { 
+		trace('statsd-cache-backend.init: HTTP server listening on port ' + myBackendPort);
+		myJoiner.done(); });
 	
 	if (events) {
         events.on('flush', flush_stats);

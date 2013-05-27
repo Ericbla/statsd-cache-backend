@@ -13,8 +13,7 @@ var mybackend = require('../statsd-cache-backend.js');
 vows.describe('Persistency').addBatch({
     'with NO config and NO stats': {
         topic: function () {
-            mybackend.init("", {}, null);
-			return 0;
+            mybackend.init("", {}, null, this.callback);
         },
         'we can save stats on default store': {
             topic : function () {
