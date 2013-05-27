@@ -4,12 +4,19 @@
 This is a pluggable backend for [StatsD](https://github.com/etsy/statsd), which
 brings a thin persistency layer to statsd and exposes cached metrics through a Web API.
 
+## Description
+TBD
+
 ## Installation
 
-    npm install statsd-cache-backend
+    git clone https://github.com/Ericbla/statsd-cache-backend.git
+    cd statsd-cache-backend
+    npm install
+    npm test
 
 
 ## Configuration
+Configure the statsd config.js file:
   * Add this backend to backends list
 ```
 backends: ['/path-to-this-module/statsd-cache-backend.js']
@@ -26,6 +33,7 @@ statsdCacheBackend: {
     "storeRate" : 360                   # Save to file period (express in number of statsd flush period)
 }
 ```
+
 
 ## Dependencies
 - [express](http://expressjs.com/)

@@ -20,6 +20,7 @@
  */
 
 var express = require('express');
+var http = require('http');
 var fs = require('fs');
 require('./response.js');
 
@@ -28,6 +29,7 @@ var flushInterval;
 var myBackendPort;
 var allStats = {};
 var service;
+var http_server;
 var metricTypes = [];
 var filters = [];
 var apiPrefix;
@@ -55,9 +57,11 @@ var save_stats = function(callback) {
         }
         trace('statsd-cache-backend: save_stats: done');
         if (callback) {
+		    trace('statsd-cache-backend: save_stats: calling callback with err: ', err);
             callback(err);
         }
     });
+	trace('statsd-cache-backend: save_stats: triggered');
 };
 exports.save_stats = save_stats;
 
@@ -65,7 +69,12 @@ var load_stats = function(callback) {
     fs.readFile(storeFile, function(err, data) {
         var loaded = 0;
         if (err) {
-            console.error('statsd-cache-backend: load_stats error: ', err);
+		    if (err.code == 'ENOENT') {
+				trace('statsd-cache-backend: load_stats Warning store file not present: ', err);
+				err = null;
+			} else {
+				console.log('statsd-cache-backend: load_stats Error: ', err);
+			}
         } else {
             trace('statsd-cache-backend: load_stats: merging (starting with ' + allStats.length + ' metrics');
             var loadedStats = JSON.parse(data);
@@ -87,6 +96,13 @@ var load_stats = function(callback) {
     });
 };
 exports.load_stats = load_stats;
+
+var clear_stats = function() {
+	for (var metric in allStats) {
+		delete allStats[metric];
+	}
+};
+exports.clear_stats = clear_stats;
 
 var filter_metrics = function (metrics, type) {
 	var filtered = {};
@@ -202,6 +218,7 @@ var backend_status = function (writeCb) {
 
 exports.init = function (startup_time, config, events) {
 	debug = config.debug;
+	trace('statsd-cache-backend.init: config: ', config);
 	config.statsdCacheBackend = config.statsdCacheBackend || {};
 	myBackendPort = config.statsdCacheBackend.httpPort || 8080;
 	var strTypes = config.statsdCacheBackend.metricTypes || 'gauges';
@@ -215,6 +232,7 @@ exports.init = function (startup_time, config, events) {
 	// Load stats from persistency file (if any)
 	load_stats();
 	
+	// Create the REST service
 	service = express();
   
 	service.get(apiPrefix + '/v1/metrics', function (req, res) {
@@ -237,14 +255,20 @@ exports.init = function (startup_time, config, events) {
 		var result = sum_metrics(metric);
 		res.respond(result, 200);
 	});
-  
+	
+	// Create the HTTP server that will serve this service
+	http_server = http.createServer(service);
+	
 	trace('statsd-cache-backend: init: Runnint HTTP server on port ' + myBackendPort);
-	service.listen(myBackendPort);
+	http_server.listen(myBackendPort);
 	
 	if (events) {
         events.on('flush', flush_stats);
         events.on('status', backend_status);
   	}
+	
+	// As a pluggin, this server must not keep the application in life by itself
+	http_server.unref();
 
   	return true;
 };
