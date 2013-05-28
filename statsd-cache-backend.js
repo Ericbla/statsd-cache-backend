@@ -314,6 +314,18 @@ exports.init = function (startup_time, config, events, ready_callback) {
 			res.respond(result, 200);
 		}
 	});
+	
+	service.del(apiPrefix + '/v1/metric/:metric', function (req, res) {
+		var metric = req.param('metric');
+		if (! allStats[metric]) {
+			res.respond('metric: ' + metric + ' not found', 404);
+		} else {
+			var result = {};
+			result[metric] = allStats[metric];
+			delete allStats[metric];
+			res.respond(result, 200);
+		}
+	});
   
 	service.get(apiPrefix + '/v1/sum/:metric', function (req, res) {
 		var metric = req.param('metric');
