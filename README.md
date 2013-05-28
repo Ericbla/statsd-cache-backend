@@ -1,4 +1,4 @@
-# Cache backend for StatsD #
+# Cache backend for StatsD [![Build Status](https://travis-ci.org/Ericbla/statsd-cache-backend.png?branch=master)](https://travis-ci.org/Ericbla/statsd-cache-backend)
 
 ## Overview ##
 This is a pluggable backend for [StatsD](https://github.com/etsy/statsd), which
