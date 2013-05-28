@@ -78,19 +78,25 @@ var load_stats = function(callback) {
 				console.log('statsd-cache-backend.load_stats: Error: ', err);
 			}
         } else {
-            trace('statsd-cache-backend.load_stats: merging (starting with ' + allStats.length + ' metrics)');
-            var loadedStats = JSON.parse(data);
-            if (loadedStats) {
-                for (var metric in loadedStats) {
-                    // Add to current stats if not alread exists
-                    if (! allStats[metric]) {
-                        loaded++;
-                        allStats[metric] = loadedStats[metric];
-                    }
-                }
-            }
-            trace('statsd-cache-backend.load_stats: done (' + allStats.length + ' metrics now)');
-            
+            trace('statsd-cache-backend.load_stats: merging (starting with '
+				+ Object.getOwnPropertyNames(allStats).length + ' metrics)');
+			var loadedStats;
+			try {
+				loadedStats = JSON.parse(data);
+				if (loadedStats) {
+					for (var metric in loadedStats) {
+						// Add to current stats if not alread exists
+						if (! allStats[metric]) {
+							loaded++;
+							allStats[metric] = loadedStats[metric];
+						}
+					}
+				}
+			} catch (ex) {
+				trace('statsd-cache-backend.load_stats: Exception: ', ex);
+			}
+            trace('statsd-cache-backend.load_stats: done ('
+				+ Object.getOwnPropertyNames(allStats).length + ' metrics now)');
         }
         if (callback) {
             callback(err, loaded);
