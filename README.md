@@ -1,13 +1,13 @@
-# Cache backend for StatsD
+# Cache backend for StatsD #
 
-## Overview
+## Overview ##
 This is a pluggable backend for [StatsD](https://github.com/etsy/statsd), which
 brings a thin persistency layer to statsd and exposes cached metrics through a Web API.
 
-## Description
-TBD
+## Description ##
+**TBD**
 
-## Installation
+## Installation ##
 
     git clone https://github.com/Ericbla/statsd-cache-backend.git
     cd statsd-cache-backend
@@ -15,11 +15,12 @@ TBD
     npm test
 
 
-## Configuration
+## Configuration ##
 Configure the statsd config.js file:
+
   * Add this backend to backends list
 ```
-backends: ['/path-to-this-module/statsd-cache-backend.js']
+"backends": ["/path-to-this-module/statsd-cache-backend.js"],
 ```
 
   * This backend supports the following config options:
@@ -31,13 +32,29 @@ statsdCacheBackend: {
     "filers" : [ "^dev\." ],            # A list of regexp for the metrics to handel
     "storeFile" : "cacheStore.json",    # The filename for persistency of this backend
     "storeRate" : 360                   # Save to file period (express in number of statsd flush period)
-}
+},
 ```
 
+## API ##
+  * GET /api/v1/metrics
+    * Get all metrics
+  * DELETE /api/v1/metrics
+    * Delete all metrics
+  * GET /api/v1/metrics/{metrics-regex-pattern}
+    * Get all metrics matching the specified pattern
+  * DELETE /api/v1/metrics/{metrics-regex-pattern}
+    * Delete all metrics matching the specified pattern
+  * GET /api/vi/metric/{metric-id}
+    * Get a specific metric
+  * DELETE /api/v1/metric/{metric-id}
+    * Delete a specific metric
+  * GET /api/v1/sum/{metrics-set-pattern}
+    * Sum metrics values (only gauges are supported) of a set of metrics specified with simple pattern. Pattern is not a regex but support the * (star) character as a wildcard for any character other than **.** (dot)
+  
 
-## Dependencies
+## Dependencies ##
 - [express](http://expressjs.com/)
 
-## Development
+## Development ##
 - [Bugs](https://github.com/Ericbla/statsd-cache-backend/issues)
 

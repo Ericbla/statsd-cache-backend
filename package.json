@@ -4,6 +4,7 @@
   "author": "Eric Blanchard <ericbla@gmail.com>",
   "private": true,
   "main": "./statsd-cache-backend.js",
+  "readmeFilename": "README.md",
   "repository": {
     "type": "git",
     "url": "https://github.com/Ericbla/statsd-cache-backend.git"
@@ -12,7 +13,8 @@
     "express": ">=3.0"
   },
   "devDependencies": {
-    "vows": "~0.7.0"
+    "vows": "~0.7.0",
+    "api-easy": "~0.3.x"
   },
   "scripts": {
     "test": "vows --spec test/*"

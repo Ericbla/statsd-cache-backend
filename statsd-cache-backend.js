@@ -100,9 +100,7 @@ var load_stats = function(callback) {
 exports.load_stats = load_stats;
 
 var clear_stats = function() {
-	for (var metric in allStats) {
-		delete allStats[metric];
-	}
+	deleteMetrics();
 };
 exports.clear_stats = clear_stats;
 
@@ -113,7 +111,7 @@ var shutdown = function(callback) {
 };
 exports.shutdown = shutdown;
 
-var filter_metrics = function (metrics, type) {
+var filter_metrics = function (metrics, type, ts) {
 	var filtered = {};
 	var theMetrics = {};
 	if (type === 'gauge') {
@@ -138,7 +136,8 @@ var filter_metrics = function (metrics, type) {
 		if (keep_metric === true) {
 			filtered[metric] = {
 					'type': type,
-					'value': theMetrics[metric]
+					'value': theMetrics[metric],
+					'ts': ts
 				};
 			if (type === 'counter') {
 				// Add a rate property
@@ -192,6 +191,39 @@ var sum_metrics = function (metrics_series) {
 	return result;
 };
 
+var getMetrics = function(prefix) {
+	var result = {};
+	
+	if (prefix) {
+		var re = new RegExp(prefix);
+		for (var metric in allStats) {
+			if (re.test(metric)) {
+				result[metric] = allStats[metric];
+			}
+		}
+	} else {
+		result = allStats;
+	}
+	
+	return result;
+};
+
+var deleteMetrics = function(prefix) {
+	var result = {};
+	var re;
+	
+	if (prefix) {
+		re = new RegExp(prefix);
+	}
+	for (var metric in allStats) {
+		if (! re || re.test(metric)) {
+			result[metric] = allStats[metric];
+			delete allStats[metric];
+		}
+	}
+	return result;
+};
+
 var flush_stats = function (ts, metrics) {
 	trace('statsd-cache-backend: flush:');
 	allStats.lastFlush = {
@@ -199,13 +231,13 @@ var flush_stats = function (ts, metrics) {
 			'date' : new Date(ts * 1000).toLocaleString()
 	};
 	if (metricTypes.indexOf('gauges') >= 0) {
-		filtered = filter_metrics(metrics, 'gauge');
+		filtered = filter_metrics(metrics, 'gauge', ts);
 		for (var metric in filtered) {
 			allStats[metric] = filtered[metric];
 		}
 	}
 	if (metricTypes.indexOf('counters') >= 0) {
-		filtered = filter_metrics(metrics, 'counter');
+		filtered = filter_metrics(metrics, 'counter', ts);
 		for (var metric in filtered) {
 			allStats[metric] = filtered[metric];
 		}
@@ -255,6 +287,21 @@ exports.init = function (startup_time, config, events, ready_callback) {
   
 	service.get(apiPrefix + '/v1/metrics', function (req, res) {
 		res.respond(allStats, 200);
+	});
+	
+	service.del(apiPrefix + '/v1/metrics', function (req, res) {
+		var result = deleteMetrics();
+		res.respond(result, 200);
+	});
+	
+	service.get(apiPrefix + '/v1/metrics/:pattern', function (req, res) {
+	    var result = getMetrics(req.param('pattern'));
+		res.respond(result, 200);
+	});
+	
+	service.del(apiPrefix + '/v1/metrics/:pattern', function (req, res) {
+		var result = deleteMetrics(req.param('pattern'));
+		res.respond(result, 200);
 	});
   
 	service.get(apiPrefix + '/v1/metric/:metric', function (req, res) {
