@@ -29,7 +29,7 @@ var shutdown_backend = function() {
 	};
 };
  
-suite.use('localhost', 8080)
+suite.use('localhost', 123456)
 .setHeader('Accept', 'application/json')
 .addBatch(init_backend())
 .next()
