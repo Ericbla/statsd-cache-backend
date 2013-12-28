@@ -15,7 +15,8 @@
  *   "metricTypes" : 'gauges, counters', # The coma separated list of metrics to consider
  *   "filers" : [ "^dev\." ],            # A list of regexp for the metrics to handel
  *   "storeFile" : "cacheStore.json",    # The filename for persistency of this backend
- *   "storeRate" : 360                   # Save to file period (express in number of statsd flush period)
+ *   "storeRate" : 360,                  # Save to file period (express in number of statsd flush period)
+ *   "ttl" : 0                           # The Time To Live in the cache (withoutout refresh) in seconds (0 for infinite)            
  * }
  */
 
@@ -36,6 +37,7 @@ var filters = [];
 var apiPrefix;
 var storeFile;
 var storeRate = 0;
+var ttl = 0;
 var flushesAfterStore = 0;
 var loading = false;
 
@@ -77,6 +79,8 @@ var save_stats = function(callback) {
 exports.save_stats = save_stats;
 
 var load_stats = function(callback) {
+	var now_ts = Math.floor(new Date().getMilliseconds() / 1000);
+	
     trace('statsd-cache-backend: load_stats triggered:');
     loading = true;
     fs.readFile(storeFile, function(err, data) {
@@ -97,8 +101,10 @@ var load_stats = function(callback) {
                 loadedStats = JSON.parse(data);
                 if (loadedStats) {
                     for (var metric in loadedStats) {
-                        // Add to current stats if not alread exists
-                        if (! allStats[metric]) {
+                        // Add to current stats if not alread exists and not expired
+                        if (! allStats[metric] &&
+                              (ttl === 0 ||
+                               now_ts - loadedStats[metric]['ts'] < ttl)) {
                             loaded++;
                             allStats[metric] = loadedStats[metric];
                         }
@@ -132,10 +138,11 @@ exports.shutdown = shutdown;
 var filter_metrics = function (metrics, type, ts) {
     var filtered = {};
     var theMetrics = {};
+    
     if (type === 'gauge') {
-        theMetrics = metrics.gauges
+        theMetrics = metrics.gauges;
     } else if (type === 'counter') {
-        theMetrics = metrics.counters
+        theMetrics = metrics.counters;
     }
     for (var metric in theMetrics) {
         var keep_metric = false;
@@ -294,6 +301,7 @@ exports.init = function (startup_time, config, events, ready_callback) {
     metricTypes = strTypes.split(/\s*,\s*/g);
     filters = config.statsdCacheBackend.filters || [];
     storeRate = config.statsdCacheBackend.storeRate || 0;
+    ttl = config.statsdCacheBackend.ttl || 0;
     flushesAfterStore = 0;
     storeFile = config.statsdCacheBackend.storeFile || __dirname + '/cacheStore.json';
     flushInterval = config.flushInterval;

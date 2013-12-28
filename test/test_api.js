@@ -37,7 +37,7 @@ suite.use('localhost', 123456)
 .get('/api/v1/metrics')
 .expect(200, 'should return an empty response', function (err, res, body) {
 		var obj;
-		assert.doesNotThrow(function() { obj = JSON.parse(body) }, SyntaxError, 'must be vaild JSON');
+		assert.doesNotThrow(function() { obj = JSON.parse(body); }, SyntaxError, 'must be vaild JSON');
 		assert.isObject(obj, 'must be an object');
 		assert.equal(Object.getOwnPropertyNames(obj).length, 0, 'must be empty');
 		
@@ -47,14 +47,14 @@ suite.use('localhost', 123456)
 .get('/api/v1/metrics/toto.*')
 .expect(200, 'should return an empty response', function (err, res, body) {
 		var obj;
-		assert.doesNotThrow(function() { obj = JSON.parse(body) }, SyntaxError, 'must be vaild JSON');
+		assert.doesNotThrow(function() { obj = JSON.parse(body); }, SyntaxError, 'must be vaild JSON');
 		assert.isObject(obj, 'must be an object');
 		assert.equal(Object.getOwnPropertyNames(obj).length, 0, 'must be empty');
 	})
 .get('/api/v1/metrics/.*')
 .expect(200, 'should return an empty response', function (err, res, body) {
 		var obj;
-		assert.doesNotThrow(function() { obj = JSON.parse(body) }, SyntaxError, 'must be vaild JSON');
+		assert.doesNotThrow(function() { obj = JSON.parse(body); }, SyntaxError, 'must be vaild JSON');
 		assert.isObject(obj, 'must be an object');
 		assert.equal(Object.getOwnPropertyNames(obj).length, 0, 'must be empty');
 	})

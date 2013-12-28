@@ -31,7 +31,8 @@ statsdCacheBackend: {
     "metricTypes" : 'gauges, counters', # The coma separated list of metrics to consider
     "filers" : [ "^dev\." ],            # A list of regexp for the metrics to handel
     "storeFile" : "cacheStore.json",    # The filename for persistency of this backend
-    "storeRate" : 360                   # Save to file period (express in number of statsd flush period)
+    "storeRate" : 360,                  # Save to file period (express in number of statsd flush period)
+    "ttl" : 0                           # The Time To Live in the cache (withoutout refresh) in seconds (0 for infinite)
 },
 ```
 
