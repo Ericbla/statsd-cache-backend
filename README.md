@@ -59,3 +59,7 @@ statsdCacheBackend: {
 ## Development ##
 - [Bugs](https://github.com/Ericbla/statsd-cache-backend/issues)
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/Ericbla/statsd-cache-backend/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
